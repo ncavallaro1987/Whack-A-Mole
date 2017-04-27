@@ -1,0 +1,163 @@
+<!-- 
+		Name: Nick Cavallaro
+		Date: due 05/02/17
+		Class: CSCI2447, Javascript Fundamentals
+		Project 7
+ -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <title>Whack-A-Mole (CSCI2447)</title>
+    <meta charset="utf-8">
+    <!-- CSS styles: This is for me to worry about; not you. -->
+	<link href="css/game.css" rel="stylesheet" />
+    <script src="js/jquery-3.1.1.min.js"></script>
+	<script>
+		var xCoord = 0;
+		var yCoord = 0;
+		var score = 0;
+		var timeRemaining = 0;
+		var moleTimer = 0;
+		var moleCounter = 0;
+		var moleRemove=0;
+		var removeTimer = 0;
+		var timerTimeout;
+		var moleTimeout;
+		var removeTimeout;
+		$(document).ready( function() {
+			//take action when start button is clicked
+			$('#start_button').click(function(){
+				startGame();	
+			});
+		});
+		function startGame() { //trigger functions when starting game
+			clearMoles(); //removes all moles created from last game
+			clickableMoles(); //enables clicking on moles
+			resetVariables(); //resets all variables to  initial values
+			$('#timer').html(timeRemaining + " seconds left"); //initialize the timer and show it to the user
+			$("#start_button").off("click"); //prevent clicking start multiple times
+			$('#timer').show(); //show the timer
+			setTimeout("runTimer()", 1000); //wait 1 second to start the timer
+			addMole(); //adds a mole on a random interval
+			$('#score').html(score + "pts");//
+		}
+		function runTimer() {//runs the countdown timer as long as there is time remaining
+			if (timeRemaining > 0) {//check for remaining time
+				timeRemaining --; //decrement timer by 1
+				$('#timer').html(timeRemaining + " seconds left"); //update timer displayed to end user
+				setTimeout("runTimer()", 1000); //continue running timer every 1 second
+			}
+			else{ //end game when timer reaches 0
+				endGame();
+			}
+		}
+		function addMole() {//adds a mole to the gamespace, initiates removing moles
+			if(timeRemaining > 0){//only create moles if there is time remaining
+				setYCoords();
+				setXCoords();
+				setMoleTimer();
+				$('#gamespace').append('<img id="mole'+moleCounter+'" class="moleClass" src="img/mole.png" style="top:'
+				+yCoord+'px;left:'+xCoord+'px;" alt="mole"/>'); //create a mole at the generated (x,y) coords
+				moleTimeout = setTimeout(function(){addMole()}, moleTimer);//make moles  appear on a timed interval
+				moleCounter++;//increment moleCounter  by 1
+				if(moleCounter<2){//initiate removing moles once first mole is created
+				setTimeout(function(){removeMole()},2000);
+				}
+			}
+		}
+		function removeMole(){//removes moles from the gamespace on random intervals
+			if (timeRemaining > 0){//check if there is time remaining
+				if(moleCounter>moleRemove){//check to make sure more moles have been created than removed
+					if ($('#mole'+moleRemove).length > 0){//check if mole about to be removed exists
+						$("#mole"+moleRemove).remove();//remove current mole
+						moleRemove++;//increment count of removed moles by 1
+						setRemoveTimer();
+						setTimeout(function(){removeMole()}, removeTimer);//randomize time of next mole removal
+					}
+					else{//if the mole about to be removed does not exist, cleanup older moles
+						$("#mole"+(moleRemove-3)).remove();
+						$("#mole"+(moleRemove-2)).remove();
+						$("#mole"+(moleRemove-1)).remove();
+						moleRemove++;//increment mole remove counter
+						removeMole();
+					}
+				}
+				else {//if no moles have been created since last removal, try again in 2 seconds
+				setTimeout(function(){removeMole()}, 2000);
+				}
+			}
+		}
+		function setXCoords() {//generates a random number between 0 and 500 for x positioning
+			xCoord = Math.floor((Math.random() * 500) + 1);
+		}
+		function setYCoords() {//generates a random number betweeen 0 and 300 for y positioning
+			yCoord = Math.floor((Math.random() * 300) + 1);
+		}
+		function updateScore() {//update and display the new score
+			score++;//increment score by 1
+			$('#score').html(score + "pts");//update score displayed to end user
+		}
+		function setMoleTimer() {//used to create a random time to create moles
+			moleTimer = Math.floor((Math.random() * 1500) +500);
+		}
+		function setRemoveTimer() {//used to create a random time to remove moles
+			removeTimer = Math.floor((Math.random() * 2000) +1000);
+		}
+		function endGame(){//used to end the game when time is out
+				$("#gamespace").off("mousedown", ".moleClass"); //prevent further clicking of moles
+				$('#start_button').click(function(){//reenable clicking the start button
+					startGame();	
+				});
+				alert("Game over. Your final score is " + score + "!");//alert end user to end of game
+		}
+		function resetVariables(){//reset variables to initial values 
+			 xCoord = 0;
+			 yCoord = 0;
+			 score = 0;
+			 timeRemaining = 30;
+			 moleTimer = 0;
+			 moleCounter = 0;
+			 moleRemove=0;
+			 removeTimer = 0;
+		}
+		function clickableMoles(){//used to make moles clickable
+			$("#gamespace").on("mousedown", ".moleClass", function(){//enable clicking moles
+				updateScore();//increment the score
+				$(this).remove();//remove the clicked mole
+				moleRemove++;//increment the mole removal counter
+			});
+		}
+		function clearMoles(){//remove any moles in the game
+			for (i=0; i<moleCounter; i++){//loop through every mole that was created in last game
+				$("#mole"+i).remove();//remove mole
+			}
+		}
+	</script>
+  </head>
+  <body>
+
+	<div id="content">
+
+		<h1 id="heading">Whack-A-Mole</h1>
+		
+		<p>After clicking "start", you will have 30 seconds to click
+		as many moles as you can. The moles appear randomly so be ready! </p>
+		
+		<div id="controls">
+			<span id="score">0 pts</span>
+			<button type="button" id="start_button">Start!</button>
+		</div>
+		
+		<div id="timer"></div>
+		
+		<div id="gamespace">
+			
+			<!--<img id="mole" src="img/mole.jpg" /> -->
+			
+		</div>
+		
+	</div>
+  </body>
+</html>
